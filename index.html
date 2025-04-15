@@ -52,78 +52,47 @@
     <input id="entradaUsuario" placeholder="Escribe algo..." disabled>
   </div>
 
-  <script type="module">
-    import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
+<script type="module">
+  import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
 
-    let chat = null;
-    let datosUsuario = {};
+  let chat = null;
+  let datosUsuario = {};
 
-    async function iniciarIA() {
-      // Guardar datos del usuario
-      datosUsuario.nombre = document.getElementById("nombre").value || "Usuario";
-      datosUsuario.edad = document.getElementById("edad").value || "desconocida";
-      datosUsuario.color = document.getElementById("color").value || "ninguno";
+  async function iniciarIA() {
+    datosUsuario.nombre = document.getElementById("nombre").value || "Usuario";
+    datosUsuario.edad = document.getElementById("edad").value || "desconocida";
+    datosUsuario.color = document.getElementById("color").value || "ninguno";
 
-      document.getElementById("formulario").style.display = "none";
-      document.getElementById("chat").style.display = "block";
+    document.getElementById("formulario").style.display = "none";
+    document.getElementById("chat").style.display = "block";
 
-      try {
-        chat = await webllm.CreateChatInstance();
-        await chat.reload("Llama-3-8B-Instruct");
-
-        escribirMensajeIA(`Hola ${datosUsuario.nombre}. ¿Listo para empezar? Puedes escribirme cuando quieras.`);
-        document.getElementById("entradaUsuario").disabled = false;
-      } catch (error) {
-        escribirMensajeIA("Error al iniciar la IA. ¿Tu navegador soporta WebGPU?");
-        console.error("Error cargando WebLLM:", error);
+    try {
+      if (!navigator.gpu) {
+        throw new Error("WebGPU no está disponible en este navegador.");
       }
+
+      chat = await webllm.CreateChatInstance();
+      await chat.reload("Llama-3-8B-Instruct");
+
+      escribirMensajeIA(`Hola ${datosUsuario.nombre}. ¿Listo para empezar?`);
+      document.getElementById("entradaUsuario").disabled = false;
+    } catch (error) {
+      escribirMensajeIA("Error: " + error.message);
+      console.error("Error al iniciar IA:", error);
     }
+  }
 
-    window.responderIA = async function (texto) {
-      escribirMensajeIA("Procesando...");
-
-      const respuesta = await chat.chat({
-        role: "user",
-        content: `Usuario: ${datosUsuario.nombre}, Edad: ${datosUsuario.edad}, Color favorito: ${datosUsuario.color}. Mensaje: ${texto}`
-      });
-
-      escribirMensajeIA(respuesta.content);
-    };
-
-    // Funciones para mostrar mensajes
-    function escribirMensajeIA(texto) {
-      const chatBox = document.getElementById("chatBox");
-      const mensaje = document.createElement("div");
-      mensaje.className = "mensaje-ia";
-      mensaje.innerText = "IA: " + texto;
-      chatBox.appendChild(mensaje);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function escribirMensajeUsuario(texto) {
-      const chatBox = document.getElementById("chatBox");
-      const mensaje = document.createElement("div");
-      mensaje.className = "mensaje-usuario";
-      mensaje.innerText = "Tú: " + texto;
-      chatBox.appendChild(mensaje);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function enviarMensaje() {
-      const input = document.getElementById("entradaUsuario");
-      const texto = input.value.trim();
-      if (texto === "") return;
-
-      escribirMensajeUsuario(texto);
-      input.value = "";
-      responderIA(texto);
-    }
-
-    document.getElementById("entradaUsuario").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        enviarMensaje();
-      }
+  window.responderIA = async function(texto) {
+    escribirMensajeIA("Procesando...");
+    const respuesta = await chat.chat({
+      role: "user",
+      content: texto
     });
-  </script>
+    escribirMensajeIA(respuesta.content);
+  };
+
+  // 👇 Esto arregla tu problema:
+  window.iniciarIA = iniciarIA;
+</script>
 </body>
 </html>
