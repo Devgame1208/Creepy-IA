@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>IA Experimental</title>
+  <style>
+    body {
+      background: black;
+      color: #00ffcc;
+      font-family: monospace;
+      padding: 20px;
+    }
+    #chat, #formulario {
+      max-width: 800px;
+      margin: auto;
+    }
+    .mensaje-ia {
+      color: #0ff;
+      margin-bottom: 10px;
+    }
+    .mensaje-usuario {
+      color: #0f0;
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    #entradaUsuario {
+      width: 100%;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 16px;
+      background: #111;
+      color: #0f0;
+      border: none;
+      border-top: 1px solid #00ffcc;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Formulario de datos -->
+  <div id="formulario">
+    <h2>Iniciar IA Experimental</h2>
+    <input type="text" id="nombre" placeholder="Tu nombre"><br><br>
+    <input type="number" id="edad" placeholder="Tu edad"><br><br>
+    <input type="text" id="color" placeholder="Tu color favorito"><br><br>
+    <button onclick="iniciarIA()">Comenzar</button>
+  </div>
+
+  <!-- Chat -->
+  <div id="chat" style="display: none;">
+    <div id="chatBox"></div>
+    <input id="entradaUsuario" placeholder="Escribe algo..." disabled>
+  </div>
+
+  <script type="module">
+    import * as webllm from "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm";
+
+    let chat = null;
+    let datosUsuario = {};
+
+    async function iniciarIA() {
+      // Guardar datos del usuario
+      datosUsuario.nombre = document.getElementById("nombre").value || "Usuario";
+      datosUsuario.edad = document.getElementById("edad").value || "desconocida";
+      datosUsuario.color = document.getElementById("color").value || "ninguno";
+
+      document.getElementById("formulario").style.display = "none";
+      document.getElementById("chat").style.display = "block";
+
+      try {
+        chat = await webllm.CreateChatInstance();
+        await chat.reload("Llama-3-8B-Instruct");
+
+        escribirMensajeIA(`Hola ${datosUsuario.nombre}. ¿Listo para empezar? Puedes escribirme cuando quieras.`);
+        document.getElementById("entradaUsuario").disabled = false;
+      } catch (error) {
+        escribirMensajeIA("Error al iniciar la IA. ¿Tu navegador soporta WebGPU?");
+        console.error("Error cargando WebLLM:", error);
+      }
+    }
+
+    window.responderIA = async function (texto) {
+      escribirMensajeIA("Procesando...");
+
+      const respuesta = await chat.chat({
+        role: "user",
+        content: `Usuario: ${datosUsuario.nombre}, Edad: ${datosUsuario.edad}, Color favorito: ${datosUsuario.color}. Mensaje: ${texto}`
+      });
+
+      escribirMensajeIA(respuesta.content);
+    };
+
+    // Funciones para mostrar mensajes
+    function escribirMensajeIA(texto) {
+      const chatBox = document.getElementById("chatBox");
+      const mensaje = document.createElement("div");
+      mensaje.className = "mensaje-ia";
+      mensaje.innerText = "IA: " + texto;
+      chatBox.appendChild(mensaje);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function escribirMensajeUsuario(texto) {
+      const chatBox = document.getElementById("chatBox");
+      const mensaje = document.createElement("div");
+      mensaje.className = "mensaje-usuario";
+      mensaje.innerText = "Tú: " + texto;
+      chatBox.appendChild(mensaje);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function enviarMensaje() {
+      const input = document.getElementById("entradaUsuario");
+      const texto = input.value.trim();
+      if (texto === "") return;
+
+      escribirMensajeUsuario(texto);
+      input.value = "";
+      responderIA(texto);
+    }
+
+    document.getElementById("entradaUsuario").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        enviarMensaje();
+      }
+    });
+  </script>
+</body>
+</html>
