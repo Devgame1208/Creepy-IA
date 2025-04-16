@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Chat con WebLLM</title>
+  <title>Chat con Hugging Face</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,6 +37,40 @@
     <div id="mensajes"></div>
     <input type="text" id="entrada" placeholder="Escribe tu mensaje aquí..." />
   </div>
-  <script type="module" src="./main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@latest"></script>
+  <script>
+    const entrada = document.getElementById("entrada");
+    const mensajes = document.getElementById("mensajes");
+
+    async function cargarModelo() {
+      const model = await window.HuggingFaceTransformers.load("gpt2");
+      return model;
+    }
+
+    async function responderIA(textoUsuario) {
+      const model = await cargarModelo();
+      const respuesta = await model.generate(textoUsuario);
+      return respuesta;
+    }
+
+    function agregarMensaje(texto, clase) {
+      const div = document.createElement("div");
+      div.className = `mensaje ${clase}`;
+      div.textContent = texto;
+      mensajes.appendChild(div);
+      mensajes.scrollTop = mensajes.scrollHeight;
+    }
+
+    entrada.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter" && entrada.value.trim() !== "") {
+        const textoUsuario = entrada.value.trim();
+        agregarMensaje(`Tú: ${textoUsuario}`, "usuario");
+        entrada.value = "";
+
+        const respuesta = await responderIA(textoUsuario);
+        agregarMensaje(`IA: ${respuesta}`, "ia");
+      }
+    });
+  </script>
 </body>
 </html>
