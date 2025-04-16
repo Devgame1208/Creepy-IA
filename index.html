@@ -37,16 +37,16 @@
 </head>
 <body>
 
-  <!-- Formulario inicial -->
+  <!-- Formulario -->
   <div id="formulario">
     <h2>Iniciar IA Experimental</h2>
     <input type="text" id="nombre" placeholder="Tu nombre"><br><br>
     <input type="number" id="edad" placeholder="Tu edad"><br><br>
     <input type="text" id="color" placeholder="Tu color favorito"><br><br>
-    <button onclick="iniciarIA()">Comenzar</button>
+    <button id="botonComenzar">Comenzar</button>
   </div>
 
-  <!-- Área del chat -->
+  <!-- Chat -->
   <div id="chat" style="display: none;">
     <div id="chatBox"></div>
     <input id="entradaUsuario" placeholder="Escribe algo..." disabled>
@@ -78,7 +78,7 @@
     }
 
     async function iniciarIA() {
-      // Guardar datos del formulario
+      // Captura datos
       datosUsuario.nombre = document.getElementById("nombre").value || "Usuario";
       datosUsuario.edad = document.getElementById("edad").value || "desconocida";
       datosUsuario.color = document.getElementById("color").value || "ninguno";
@@ -87,7 +87,7 @@
       document.getElementById("formulario").style.display = "none";
       document.getElementById("chat").style.display = "block";
 
-      // Iniciar IA real
+      // Iniciar IA
       chat = await webllm.CreateChatInstance();
       await chat.reload("Llama-3-8B-Instruct");
       escribirMensajeIA("Hola, " + datosUsuario.nombre + ". Estoy lista para hablar contigo.");
@@ -100,25 +100,20 @@
       escribirMensajeIA(respuesta.content);
     }
 
-    // Hacer funciones accesibles globalmente
-    window.iniciarIA = iniciarIA;
-    window.responderIA = responderIA;
+    // Eventos
+    document.getElementById("botonComenzar").addEventListener("click", iniciarIA);
 
-    // Enviar mensaje con Enter
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("entradaUsuario").addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          const input = document.getElementById("entradaUsuario");
-          const texto = input.value.trim();
-          if (texto !== "") {
-            escribirMensajeUsuario(texto);
-            input.value = "";
-            responderIA(texto);
-          }
+    document.getElementById("entradaUsuario").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const input = document.getElementById("entradaUsuario");
+        const texto = input.value.trim();
+        if (texto !== "") {
+          escribirMensajeUsuario(texto);
+          input.value = "";
+          responderIA(texto);
         }
-      });
+      }
     });
   </script>
-
 </body>
 </html>
