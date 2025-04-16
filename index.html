@@ -57,6 +57,7 @@
       document.getElementById("chat").style.display = "block";
 
       escribirMensajeIA("Cargando modelo...");
+
       chat = await ChatModule.CreateChatInstance();
       await chat.reload("Llama-3-8B-Instruct");
 
